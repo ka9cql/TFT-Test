@@ -12,36 +12,37 @@
  * │ MOSI      │ GPIO 9    │ SDI     │ SPI Data In       │
  * │ SCLK      │ GPIO 7    │ SCK     │ SPI Clock         │
  * │ CS        │ GPIO 3    │ CS      │ Chip Select       │
- * │ DC        │ GPIO 6    │ DC/RS   │ Data/Command      │
- * │ RST       │ GPIO 2    │ RESET   │ Reset             │
- * │ LED       │ GPIO 5    │ LED/BL  │ Backlight Control │
+ * │ DC        │ GPIO 44   │ DC/RS   │ Data/Command      │
+ * │ RST       │ GPIO 43   │ RESET   │ Reset             │
+ * │ LED       │ GPIO 2    │ LED/BL  │ Backlight Control │
  * │ BUZZER    │ GPIO 1    │ N/A     │ Audio Buzzer      │
  * └─────────────────────────────────────────────────────┘
  */
 
 #include <Arduino.h>
-#include <TFT_eSPI.h>
 #include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ILI9341.h>
 
-// Pin definitions (defined in platformio.ini, declared here for reference)
+// Pin definitions
 #define TFT_MISO 8
 #define TFT_MOSI 9
 #define TFT_SCLK 7
 #define TFT_CS   3
-#define TFT_DC   6
-#define TFT_RST  2
-#define TFT_BL   5
+#define TFT_DC   44
+#define TFT_RST  43
+#define TFT_BL   2
 #define BUZZER   1
 
-// Create TFT object
-TFT_eSPI tft = TFT_eSPI();
+// Create display object with hardware SPI
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
 // Color definitions
-#define COLOR_BG      0x0000  // Black
-#define COLOR_TEXT    0xFFFF  // White
-#define COLOR_TITLE   0x07FF  // Cyan
-#define COLOR_SUCCESS 0x07E0  // Green
-#define COLOR_INFO    0xFFE0  // Yellow
+#define COLOR_BG      ILI9341_BLACK
+#define COLOR_TEXT    ILI9341_WHITE
+#define COLOR_TITLE   ILI9341_CYAN
+#define COLOR_SUCCESS ILI9341_GREEN
+#define COLOR_INFO    ILI9341_YELLOW
 
 /**
  * Initialize the TFT backlight
@@ -82,30 +83,40 @@ void displayHelloWorld() {
   tft.fillScreen(COLOR_BG);
 
   // Draw title bar
-  tft.fillRect(0, 0, 240, 40, TFT_NAVY);
-  tft.setTextColor(COLOR_TITLE, TFT_NAVY);
-  tft.setTextDatum(MC_DATUM);
-  tft.drawString("TFT Display Test", 120, 20, 4);
+  tft.fillRect(0, 0, 240, 40, ILI9341_NAVY);
+  tft.setTextColor(COLOR_TITLE);
+  tft.setTextSize(2);
+  tft.setCursor(25, 12);
+  tft.println("TFT Display Test");
 
   // Display main message
-  tft.setTextColor(COLOR_TEXT, COLOR_BG);
-  tft.setTextDatum(MC_DATUM);
-  tft.drawString("Hello World!", 120, 100, 7);
+  tft.setTextColor(COLOR_TEXT);
+  tft.setTextSize(4);
+  tft.setCursor(15, 100);
+  tft.println("Hello");
+  tft.setCursor(15, 135);
+  tft.println("World!");
 
   // Display board info
-  tft.setTextColor(COLOR_INFO, COLOR_BG);
-  tft.setTextDatum(MC_DATUM);
-  tft.drawString("XIAO ESP32S3", 120, 160, 4);
-  tft.drawString("2.8\" ILI9341", 120, 190, 4);
-  tft.drawString("240x320 Display", 120, 220, 2);
+  tft.setTextColor(COLOR_INFO);
+  tft.setTextSize(2);
+  tft.setCursor(20, 180);
+  tft.println("XIAO ESP32S3");
+  tft.setCursor(15, 200);
+  tft.println("2.8\" ILI9341");
+  tft.setTextSize(1);
+  tft.setCursor(50, 225);
+  tft.println("240x320 Display");
 
   // Display connection status
-  tft.setTextColor(COLOR_SUCCESS, COLOR_BG);
-  tft.drawString("Connected!", 120, 260, 4);
+  tft.setTextColor(COLOR_SUCCESS);
+  tft.setTextSize(3);
+  tft.setCursor(15, 260);
+  tft.println("Connected!");
 
   // Draw decorative border
-  tft.drawRect(5, 45, 230, 270, TFT_WHITE);
-  tft.drawRect(6, 46, 228, 268, TFT_WHITE);
+  tft.drawRect(5, 45, 230, 270, ILI9341_WHITE);
+  tft.drawRect(6, 46, 228, 268, ILI9341_WHITE);
 
   Serial.println("✓ Hello World displayed on TFT");
 }
@@ -119,43 +130,52 @@ void displayColorTest() {
   tft.fillScreen(COLOR_BG);
 
   // Title
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.setTextDatum(TC_DATUM);
-  tft.drawString("Color Test", 120, 10, 4);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(2);
+  tft.setCursor(40, 10);
+  tft.println("Color Test");
 
   // Draw color bars
   int barHeight = 35;
   int startY = 50;
 
-  tft.fillRect(0, startY + (barHeight * 0), 240, barHeight, TFT_RED);
-  tft.fillRect(0, startY + (barHeight * 1), 240, barHeight, TFT_GREEN);
-  tft.fillRect(0, startY + (barHeight * 2), 240, barHeight, TFT_BLUE);
-  tft.fillRect(0, startY + (barHeight * 3), 240, barHeight, TFT_YELLOW);
-  tft.fillRect(0, startY + (barHeight * 4), 240, barHeight, TFT_MAGENTA);
-  tft.fillRect(0, startY + (barHeight * 5), 240, barHeight, TFT_CYAN);
-  tft.fillRect(0, startY + (barHeight * 6), 240, barHeight, TFT_WHITE);
+  tft.fillRect(0, startY + (barHeight * 0), 240, barHeight, ILI9341_RED);
+  tft.fillRect(0, startY + (barHeight * 1), 240, barHeight, ILI9341_GREEN);
+  tft.fillRect(0, startY + (barHeight * 2), 240, barHeight, ILI9341_BLUE);
+  tft.fillRect(0, startY + (barHeight * 3), 240, barHeight, ILI9341_YELLOW);
+  tft.fillRect(0, startY + (barHeight * 4), 240, barHeight, ILI9341_MAGENTA);
+  tft.fillRect(0, startY + (barHeight * 5), 240, barHeight, ILI9341_CYAN);
+  tft.fillRect(0, startY + (barHeight * 6), 240, barHeight, ILI9341_WHITE);
 
   // Label colors
-  tft.setTextColor(TFT_WHITE, TFT_RED);
-  tft.drawString("RED", 120, startY + (barHeight * 0) + 10, 2);
+  tft.setTextSize(2);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setCursor(80, startY + (barHeight * 0) + 10);
+  tft.println("RED");
 
-  tft.setTextColor(TFT_BLACK, TFT_GREEN);
-  tft.drawString("GREEN", 120, startY + (barHeight * 1) + 10, 2);
+  tft.setTextColor(ILI9341_BLACK);
+  tft.setCursor(65, startY + (barHeight * 1) + 10);
+  tft.println("GREEN");
 
-  tft.setTextColor(TFT_WHITE, TFT_BLUE);
-  tft.drawString("BLUE", 120, startY + (barHeight * 2) + 10, 2);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setCursor(75, startY + (barHeight * 2) + 10);
+  tft.println("BLUE");
 
-  tft.setTextColor(TFT_BLACK, TFT_YELLOW);
-  tft.drawString("YELLOW", 120, startY + (barHeight * 3) + 10, 2);
+  tft.setTextColor(ILI9341_BLACK);
+  tft.setCursor(60, startY + (barHeight * 3) + 10);
+  tft.println("YELLOW");
 
-  tft.setTextColor(TFT_WHITE, TFT_MAGENTA);
-  tft.drawString("MAGENTA", 120, startY + (barHeight * 4) + 10, 2);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setCursor(50, startY + (barHeight * 4) + 10);
+  tft.println("MAGENTA");
 
-  tft.setTextColor(TFT_BLACK, TFT_CYAN);
-  tft.drawString("CYAN", 120, startY + (barHeight * 5) + 10, 2);
+  tft.setTextColor(ILI9341_BLACK);
+  tft.setCursor(75, startY + (barHeight * 5) + 10);
+  tft.println("CYAN");
 
-  tft.setTextColor(TFT_BLACK, TFT_WHITE);
-  tft.drawString("WHITE", 120, startY + (barHeight * 6) + 10, 2);
+  tft.setTextColor(ILI9341_BLACK);
+  tft.setCursor(70, startY + (barHeight * 6) + 10);
+  tft.println("WHITE");
 
   Serial.println("✓ Color test displayed");
 }
@@ -178,7 +198,22 @@ void setup() {
 
   // Initialize TFT display
   Serial.println("Initializing TFT display...");
-  tft.init();
+  Serial.println("  Pin Configuration:");
+  Serial.printf("    MISO: GPIO %d\n", TFT_MISO);
+  Serial.printf("    MOSI: GPIO %d\n", TFT_MOSI);
+  Serial.printf("    SCLK: GPIO %d\n", TFT_SCLK);
+  Serial.printf("    CS:   GPIO %d\n", TFT_CS);
+  Serial.printf("    DC:   GPIO %d\n", TFT_DC);
+  Serial.printf("    RST:  GPIO %d\n", TFT_RST);
+
+  // Initialize SPI with custom pins
+  Serial.println("  Setting up SPI...");
+  SPI.begin(TFT_SCLK, TFT_MISO, TFT_MOSI);
+
+  // Initialize display
+  Serial.println("  Calling tft.begin()...");
+  tft.begin();
+  delay(100);
   tft.setRotation(0);  // Portrait mode (0 or 2), use 1 or 3 for landscape
 
   Serial.println("✓ TFT initialized successfully");
@@ -186,6 +221,16 @@ void setup() {
   Serial.print(tft.width());
   Serial.print(" x ");
   Serial.println(tft.height());
+
+  // Test display is responsive
+  Serial.println("  Testing display...");
+  tft.fillScreen(ILI9341_RED);
+  delay(500);
+  tft.fillScreen(ILI9341_GREEN);
+  delay(500);
+  tft.fillScreen(ILI9341_BLUE);
+  delay(500);
+  Serial.println("✓ Display test complete");
 
   // Display Hello World
   displayHelloWorld();
